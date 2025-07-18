@@ -1,4 +1,4 @@
-import httpx
+import json
 import sqlite3
 import asyncio
 from typing import Optional
@@ -65,20 +65,20 @@ async def add_channel_to_db(id):
             # Handle the case where info is None or empty
             raise Exception("Failed to extract info or got None")
 
-        if "id" in info:
-            cur.execute(
-                """INSERT INTO channels VALUES (?, ?, ?, ?, ?, ?, ?)""",
-                (
-                    info.get("id"),
-                    info.get("title"),
-                    info.get("channel_url"),
-                    info.get("channel_id"),
-                    info.get("uploader_id"),
-                    info.get("uploader_url"),
-                    info.get("channel_follower_count")
-                ),
-            )
-            con.commit()
+        # if "id" in info:
+        #     cur.execute(
+        #         """INSERT INTO channels VALUES (?, ?, ?, ?, ?, ?, ?)""",
+        #         (
+        #             info.get("id"),
+        #             info.get("title"),
+        #             info.get("channel_url"),
+        #             info.get("channel_id"),
+        #             info.get("uploader_id"),
+        #             info.get("uploader_url"),
+        #             info.get("channel_follower_count")
+        #         ),
+        #     )
+        #     con.commit()
 
     print("Data inserted into the table")
 
@@ -102,20 +102,19 @@ async def add_channel_to_db(id):
                         )
                     con.commit()
             else:
-                for video in entry:
-                    cur.execute(
-                        """INSERT INTO videos VALUES (?, ?, ?, ?, ?, ?, ?)""", 
-                        (
-                            video.get("id"),
-                            info.get("uploader_id"),
-                            video.get("url"),
-                            video.get("title"),
-                            video.get("description"),
-                            video.get("duration"),
-                            video.get("view_count")
-                        )
+                cur.execute(
+                    """INSERT INTO videos VALUES (?, ?, ?, ?, ?, ?, ?)""", 
+                    (
+                        entry.get("id"),
+                        info.get("uploader_id"),
+                        entry.get("url"),
+                        entry.get("title"),
+                        entry.get("description"),
+                        entry.get("duration"),
+                        entry.get("view_count")
                     )
-                    con.commit()
+                )
+                con.commit()
                 
         title = info.get("title") or ""
         print(title + " - " + str(info.get("channel_follower_count")))
@@ -249,7 +248,7 @@ async def get_channel_by_id(id: str):
     try:
         channel_id = ObjectID(id=id)
         res = cur.execute(
-            "SELECT id, title, uploader_url, channel_follower_count FROM channels WHERE id = (?)",
+            "SELECT id, title, uploader_url, channel_follower_count FROM channels WHERE uploader_id = (?)",
             (channel_id.id,)
         )
         row = res.fetchone()
